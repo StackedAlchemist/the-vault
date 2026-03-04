@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Vault — Personal Finance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="vault.css"/>
+</head>
+<body>
+<div class="bg-wrap" aria-hidden="true">
+  <div class="bg-orb orb-1"></div><div class="bg-orb orb-2"></div><div class="bg-grid"></div>
+</div>
+
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<!-- Sidebar overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
+  <div class="sidebar-brand" aria-label="The Vault">
+    <span class="brand-icon" aria-hidden="true">⚗</span>
+    <span class="brand-name">The Vault</span>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="nav-item active" data-view="overview"   aria-current="page" tabindex="0"><span class="nav-icon" aria-hidden="true">◈</span> Overview</button>
+    <button class="nav-item" data-view="transactions"      tabindex="0"><span class="nav-icon" aria-hidden="true">📜</span> Transactions</button>
+    <button class="nav-item" data-view="accounts"          tabindex="0"><span class="nav-icon" aria-hidden="true">🏦</span> Accounts</button>
+    <button class="nav-item" data-view="budgets"           tabindex="0"><span class="nav-icon" aria-hidden="true">⚖</span> Budgets</button>
+    <button class="nav-item" data-view="pots"              tabindex="0"><span class="nav-icon" aria-hidden="true">✦</span> Saving Pots</button>
+    <button class="nav-item" data-view="bills"             tabindex="0"><span class="nav-icon" aria-hidden="true">🔔</span> Bills</button>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="../index.html" class="back-link" tabindex="0">← Portfolio</a>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main-wrap" id="main-content">
+  <header class="topbar" role="banner">
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false" tabindex="0">☰</button>
+    <h1 class="topbar-title" id="topbarTitle">Overview</h1>
+    <div class="topbar-controls" role="toolbar" aria-label="View controls">
+      <div class="month-controls" role="group" aria-label="Month navigation">
+        <button class="month-nav" id="prevMonth" aria-label="Previous month" tabindex="0">‹</button>
+        <span class="month-label" id="monthLabel" aria-live="polite">March 2026</span>
+        <button class="month-nav" id="nextMonth" aria-label="Next month" tabindex="0">›</button>
+      </div>
+      <button class="filter-btn active" id="filterMonth" aria-pressed="true"  tabindex="0">Monthly</button>
+      <button class="filter-btn"        id="filterAll"   aria-pressed="false" tabindex="0">All Time</button>
+      <select class="acct-filter-sel" id="acctFilter" aria-label="Filter by account" tabindex="0">
+        <option value="all">All Accounts</option>
+      </select>
+      <button class="export-btn" id="exportBtn" tabindex="0">↓ CSV</button>
+      <button class="import-btn import-csv-btn" id="csvImportBtn" aria-label="Import CSV file" tabindex="0">↑ CSV</button>
+      <input type="file" id="importFile" accept=".csv" style="display:none" aria-hidden="true"/>
+      <button class="import-btn import-pdf-btn" id="pdfImportBtn" aria-label="Import PDF statement" tabindex="0">↑ PDF</button>
+      <input type="file" id="importPdfFile" accept=".pdf" style="display:none" aria-hidden="true"/>
+      <button class="template-btn" id="templateBtn" tabindex="0">⬡ Template</button>
+    </div>
+  </header>
+
+  <!-- ⚠ LOCAL STORAGE DISCLAIMER -->
+  <div class="local-disclaimer" role="note" aria-label="Data storage notice">
+    <span class="disclaimer-icon">⚠</span>
+    <span class="disclaimer-text">
+      The archives are bound to this vessel. Data persists in local memory only —
+      switching devices or clearing your cache will release the binding.
+    </span>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="view active" id="view-overview" role="main">
+    <div class="summary-cards" id="acctSummaryRow" aria-label="Account summaries"></div>
+    <div class="dash-grid">
+      <div class="card chart-card">
+        <div class="card-header">
+          <span class="card-title">Income vs Expenses</span>
+          <select class="mini-sel" id="chartRange" aria-label="Chart range" tabindex="0">
+            <option value="6">Last 6 Months</option>
+            <option value="12">Last 12 Months</option>
+          </select>
+        </div>
+        <canvas id="mainChart" height="200" role="img" aria-label="Income vs expenses bar chart"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Recent Transactions</span></div>
+        <div class="tx-mini-list" id="recentTx" aria-label="Recent transactions"></div>
+      </div>
+    </div>
+    <div class="dash-grid">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Spending by Category</span></div>
+        <div class="pie-wrap">
+          <canvas id="pieChart" width="200" height="200" role="img" aria-label="Spending by category pie chart"></canvas>
+          <div class="pie-legend" id="pieLegend" aria-label="Category legend"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Top Merchants</span></div>
+        <div id="topMerchants" aria-label="Top merchants by spending"></div>
+      </div>
+    </div>
+    <div class="dash-grid">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Budget Overview</span><button class="card-link" data-goto="budgets" tabindex="0">See all →</button></div>
+        <div class="budget-mini" id="budgetMini" aria-label="Budget overview"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Bills Due Soon</span><button class="card-link" data-goto="bills" tabindex="0">See all →</button></div>
+        <div class="bills-mini" id="billsMini" aria-label="Bills due soon"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSACTIONS -->
+  <div class="view" id="view-transactions" role="main">
+    <div class="view-header">
+      <h2 class="view-title">Transactions</h2>
+      <button class="btn-primary" id="addTxBtn" tabindex="0">+ Add Transaction</button>
+    </div>
+    <div class="filter-row" role="search" aria-label="Filter transactions">
+      <select class="mini-sel" id="txFilterType" aria-label="Filter by type" tabindex="0">
+        <option value="all">All Types</option><option value="income">Income</option>
+        <option value="expense">Expense</option><option value="transfer">Transfer</option>
+      </select>
+      <select class="mini-sel" id="txFilterCat"  aria-label="Filter by category" tabindex="0"><option value="all">All Categories</option></select>
+      <select class="mini-sel" id="txFilterAcct" aria-label="Filter by account"  tabindex="0"><option value="all">All Accounts</option></select>
+      <select class="mini-sel" id="txSort" aria-label="Sort transactions" tabindex="0">
+        <option value="newest">Newest</option><option value="oldest">Oldest</option>
+        <option value="highest">Highest</option><option value="lowest">Lowest</option>
+      </select>
+      <input type="search" class="search-input" id="txSearch" placeholder="Search transactions…" aria-label="Search transactions" tabindex="0"/>
+    </div>
+    <div class="tx-count" id="txCount" aria-live="polite">0 transactions</div>
+    <div class="tx-list" id="txList" aria-label="Transaction list"></div>
+    <div class="pagination" id="txPagination" role="navigation" aria-label="Transaction pages"></div>
+  </div>
+
+  <!-- ACCOUNTS -->
+  <div class="view" id="view-accounts" role="main">
+    <div class="view-header">
+      <h2 class="view-title">Accounts</h2>
+      <button class="btn-primary" id="addAccountBtn" tabindex="0">+ Add Account</button>
+    </div>
+    <div class="card nw-card-combined">
+      <div class="card-header"><span class="card-title">Household Total</span></div>
+      <div class="household-row" id="householdRow" aria-label="Household financial totals"></div>
+    </div>
+    <div class="accounts-grid" id="accountsGrid" aria-label="Account cards"></div>
+  </div>
+
+  <!-- BUDGETS -->
+  <div class="view" id="view-budgets" role="main">
+    <div class="view-header">
+      <h2 class="view-title">Budgets</h2>
+      <button class="btn-primary" id="addBudgetBtn" tabindex="0">+ Add Budget</button>
+    </div>
+    <div class="budget-grid" id="budgetGrid" aria-label="Budget categories"></div>
+  </div>
+
+  <!-- SAVING POTS -->
+  <div class="view" id="view-pots" role="main">
+    <div class="view-header">
+      <h2 class="view-title">Saving Pots</h2>
+      <button class="btn-primary" id="addPotBtn" tabindex="0">+ Add Pot</button>
+    </div>
+    <div class="goals-grid" id="potsGrid" aria-label="Saving pots"></div>
+  </div>
+
+  <!-- BILLS -->
+  <div class="view" id="view-bills" role="main">
+    <div class="view-header">
+      <h2 class="view-title">Bills & Recurring</h2>
+      <button class="btn-primary" id="addBillBtn" tabindex="0">+ Add Bill</button>
+    </div>
+    <div class="filter-row" role="search" aria-label="Filter bills">
+      <input type="search" class="search-input" id="billSearch" placeholder="Search bills…" aria-label="Search bills" tabindex="0"/>
+      <select class="mini-sel" id="billSort" aria-label="Sort bills" tabindex="0">
+        <option value="due">By Due Date</option>
+        <option value="name">By Name</option>
+        <option value="amount">By Amount</option>
+      </select>
+    </div>
+    <div class="bills-list" id="billsList" aria-label="Bills list"></div>
+  </div>
+</div>
+
+<!-- ══ MODALS ══ -->
+
+<!-- Transaction -->
+<div class="modal-overlay hidden" id="txModal" role="dialog" aria-modal="true" aria-labelledby="txModalTitle">
+  <div class="modal" role="document">
+    <button class="modal-x" id="txModalClose" aria-label="Close dialog" tabindex="0">✕</button>
+    <div class="modal-title" id="txModalTitle">Add Transaction</div>
+    <div class="modal-body">
+      <div class="type-tabs" id="txTypeTabs" role="tablist" aria-label="Transaction type">
+        <button class="type-tab active" data-type="income"   role="tab" aria-selected="true"  tabindex="0">Income</button>
+        <button class="type-tab"        data-type="expense"  role="tab" aria-selected="false" tabindex="-1">Expense</button>
+        <button class="type-tab"        data-type="transfer" role="tab" aria-selected="false" tabindex="-1">Transfer</button>
+      </div>
+      <div class="field-row two-col">
+        <div class="field">
+          <label for="txDesc">Description <span class="req" aria-hidden="true">*</span></label>
+          <input type="text" id="txDesc" class="field-input" placeholder="e.g. Salary, Groceries…" aria-required="true" tabindex="0"/>
+          <span class="field-error" id="txDescErr" role="alert" aria-live="polite"></span>
+        </div>
+        <div class="field">
+          <label for="txAcct">Account</label>
+          <select id="txAcct" class="field-input" tabindex="0"></select>
+        </div>
+      </div>
+      <div class="field-row two-col">
+        <div class="field">
+          <label for="txAmount">Amount <span class="req" aria-hidden="true">*</span></label>
+          <div class="amount-wrap"><span class="cur-sign" aria-hidden="true">$</span><input type="number" id="txAmount" class="field-input amount-input" placeholder="0.00" step="0.01" min="0" aria-required="true" tabindex="0"/></div>
+          <span class="field-error" id="txAmountErr" role="alert" aria-live="polite"></span>
+        </div>
+        <div class="field">
+          <label for="txDate">Date <span class="req" aria-hidden="true">*</span></label>
+          <input type="date" id="txDate" class="field-input" aria-required="true" tabindex="0"/>
+          <span class="field-error" id="txDateErr" role="alert" aria-live="polite"></span>
+        </div>
+      </div>
+      <div class="field-row two-col">
+        <div class="field"><label for="txCat">Category</label><select id="txCat" class="field-input" tabindex="0"></select></div>
+        <div class="field"><label for="txNotes">Notes</label><input type="text" id="txNotes" class="field-input" placeholder="Optional…" tabindex="0"/></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" id="txSave" tabindex="0">Save Transaction</button>
+      <button class="btn-danger hidden" id="txDelete" tabindex="0">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Account -->
+<div class="modal-overlay hidden" id="accountModal" role="dialog" aria-modal="true" aria-labelledby="accountModalTitle">
+  <div class="modal modal-sm" role="document">
+    <button class="modal-x" id="accountModalClose" aria-label="Close dialog" tabindex="0">✕</button>
+    <div class="modal-title" id="accountModalTitle">Add Account</div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="accountName">Account Name <span class="req" aria-hidden="true">*</span></label>
+        <input type="text" id="accountName" class="field-input" placeholder="e.g. Bills, Spending…" aria-required="true" tabindex="0"/>
+        <span class="field-error" id="accountNameErr" role="alert" aria-live="polite"></span>
+      </div>
+      <div class="field"><label for="accountType">Type</label>
+        <select id="accountType" class="field-input" tabindex="0">
+          <option value="checking">Checking</option><option value="savings">Savings</option>
+          <option value="credit">Credit Card</option><option value="cash">Cash</option>
+          <option value="investment">Investment</option><option value="other">Other</option>
+        </select>
+      </div>
+      <div class="field"><label for="accountOwner">Owner</label><input type="text" id="accountOwner" class="field-input" placeholder="e.g. Joint, Your Name…" tabindex="0"/></div>
+      <div class="field"><label for="accountColor">Color</label><input type="color" id="accountColor" class="field-input color-input" value="#00ffc8" tabindex="0"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" id="accountSave" tabindex="0">Save</button>
+      <button class="btn-danger hidden" id="accountDelete" tabindex="0">Delete Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- Budget -->
+<div class="modal-overlay hidden" id="budgetModal" role="dialog" aria-modal="true" aria-labelledby="budgetModalLabel">
+  <div class="modal modal-sm" role="document">
+    <button class="modal-x" id="budgetModalClose" aria-label="Close dialog" tabindex="0">✕</button>
+    <div class="modal-title" id="budgetModalLabel">Budget Category</div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="budgetName">Category Name <span class="req" aria-hidden="true">*</span></label>
+        <input type="text" id="budgetName" class="field-input" placeholder="e.g. Groceries" aria-required="true" tabindex="0"/>
+        <span class="field-error" id="budgetNameErr" role="alert" aria-live="polite"></span>
+      </div>
+      <div class="field">
+        <label for="budgetLimit">Monthly Limit <span class="req" aria-hidden="true">*</span></label>
+        <div class="amount-wrap"><span class="cur-sign" aria-hidden="true">$</span><input type="number" id="budgetLimit" class="field-input amount-input" placeholder="0.00" step="0.01" min="0" aria-required="true" tabindex="0"/></div>
+        <span class="field-error" id="budgetLimitErr" role="alert" aria-live="polite"></span>
+      </div>
+      <div class="field"><label for="budgetColor">Color</label><input type="color" id="budgetColor" class="field-input color-input" value="#00ffc8" tabindex="0"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" id="budgetSave" tabindex="0">Save</button>
+      <button class="btn-danger hidden" id="budgetDelete" tabindex="0">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pot -->
+<div class="modal-overlay hidden" id="potModal" role="dialog" aria-modal="true" aria-labelledby="potModalLabel">
+  <div class="modal modal-sm" role="document">
+    <button class="modal-x" id="potModalClose" aria-label="Close dialog" tabindex="0">✕</button>
+    <div class="modal-title" id="potModalLabel">Saving Pot</div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="potName">Pot Name <span class="req" aria-hidden="true">*</span></label>
+        <input type="text" id="potName" class="field-input" placeholder="e.g. Emergency Fund" aria-required="true" tabindex="0"/>
+        <span class="field-error" id="potNameErr" role="alert" aria-live="polite"></span>
+      </div>
+      <div class="field-row two-col">
+        <div class="field">
+          <label for="potTarget">Target <span class="req" aria-hidden="true">*</span></label>
+          <div class="amount-wrap"><span class="cur-sign" aria-hidden="true">$</span><input type="number" id="potTarget" class="field-input amount-input" placeholder="0.00" step="0.01" min="0" aria-required="true" tabindex="0"/></div>
+          <span class="field-error" id="potTargetErr" role="alert" aria-live="polite"></span>
+        </div>
+        <div class="field"><label for="potSaved">Saved So Far</label><div class="amount-wrap"><span class="cur-sign" aria-hidden="true">$</span><input type="number" id="potSaved" class="field-input amount-input" placeholder="0.00" step="0.01" min="0" tabindex="0"/></div></div>
+      </div>
+      <div class="field"><label for="potDate">Target Date</label><input type="date" id="potDate" class="field-input" tabindex="0"/></div>
+      <div class="field"><label for="potColor">Color</label><input type="color" id="potColor" class="field-input color-input" value="#9d7fff" tabindex="0"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" id="potSave" tabindex="0">Save</button>
+      <button class="btn-danger hidden" id="potDelete" tabindex="0">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pot Add/Withdraw -->
+<div class="modal-overlay hidden" id="potFundModal" role="dialog" aria-modal="true" aria-labelledby="potFundTitle">
+  <div class="modal modal-sm" role="document">
+    <button class="modal-x" id="potFundClose" aria-label="Close dialog" tabindex="0">✕</button>
+    <div class="modal-title" id="potFundTitle">Add Money</div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="potFundAmount">Amount <span class="req" aria-hidden="true">*</span></label>
+        <div class="amount-wrap"><span class="cur-sign" aria-hidden="true">$</span><input type="number" id="potFundAmount" class="field-input amount-input" placeholder="0.00" step="0.01" min="0.01" aria-required="true" tabindex="0"/></div>
+        <span class="field-error" id="potFundErr" role="alert" aria-live="polite"></span>
+      </div>
+      <p class="pot-fund-info" id="potFundInfo"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" id="potFundConfirm" tabindex="0">Confirm</button>
+      <button class="btn-secondary" id="potFundCancel" tabindex="0">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bill -->
+<div class="modal-overlay hidden" id="billModal" role="dialog" aria-modal="true" aria-labelledby="billModalLabel">
+  <div class="modal modal-sm" role="document">
+    <button class="modal-x" id="billModalClose" aria-label="Close dialog" tabindex="0">✕</button>
+    <div class="modal-title" id="billModalLabel">Bill / Recurring</div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="billName">Bill Name <span class="req" aria-hidden="true">*</span></label>
+        <input type="text" id="billName" class="field-input" placeholder="e.g. Netflix, Rent…" aria-required="true" tabindex="0"/>
+        <span class="field-error" id="billNameErr" role="alert" aria-live="polite"></span>
+      </div>
+      <div class="field-row two-col">
+        <div class="field">
+          <label for="billAmount">Amount <span class="req" aria-hidden="true">*</span></label>
+          <div class="amount-wrap"><span class="cur-sign" aria-hidden="true">$</span><input type="number" id="billAmount" class="field-input amount-input" placeholder="0.00" step="0.01" min="0" aria-required="true" tabindex="0"/></div>
+          <span class="field-error" id="billAmountErr" role="alert" aria-live="polite"></span>
+        </div>
+        <div class="field">
+          <label for="billDue">Due Day <span class="req" aria-hidden="true">*</span></label>
+          <input type="number" id="billDue" class="field-input" placeholder="1–31" min="1" max="31" aria-required="true" tabindex="0"/>
+          <span class="field-error" id="billDueErr" role="alert" aria-live="polite"></span>
+        </div>
+      </div>
+      <div class="field-row two-col">
+        <div class="field"><label for="billFreq">Frequency</label><select id="billFreq" class="field-input" tabindex="0"><option value="monthly">Monthly</option><option value="weekly">Weekly</option><option value="yearly">Yearly</option></select></div>
+        <div class="field"><label for="billCat">Category</label><select id="billCat" class="field-input" tabindex="0"></select></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" id="billSave" tabindex="0">Save</button>
+      <button class="btn-danger hidden" id="billDelete" tabindex="0">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Account Picker -->
+<div class="modal-overlay hidden" id="importAcctModal" role="dialog" aria-modal="true" aria-labelledby="importAcctLabel">
+  <div class="modal modal-sm" role="document">
+    <div class="modal-title" id="importAcctLabel">Assign to Account</div>
+    <div class="modal-body">
+      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:0.5rem">Which account should these transactions be assigned to?</p>
+      <div class="field"><label for="importAcctSel">Account</label><select id="importAcctSel" class="field-input" tabindex="0"></select></div>
+    </div>
+    <div class="modal-footer"><button class="btn-primary" id="importAcctConfirm" tabindex="0">Continue</button></div>
+  </div>
+</div>
+
+<!-- PDF Modal -->
+<div class="modal-overlay hidden" id="pdfModal" role="dialog" aria-modal="true" aria-labelledby="pdfModalLabel">
+  <div class="pdf-modal" role="document">
+    <button class="modal-x" id="pdfModalClose" aria-label="Close dialog" tabindex="0">✕</button>
+    <div class="modal-title" id="pdfModalLabel" style="color:var(--amber)">📄 Import Bank PDF</div>
+    <div class="pdf-status" id="pdfStatus" role="status" aria-live="polite">Reading PDF...</div>
+    <div class="pdf-select-row" id="pdfSelectRow" style="display:none">
+      <span style="font-family:var(--font-mono);font-size:0.62rem;color:var(--muted)" id="pdfFoundCount" aria-live="polite"></span>
+      <button class="pdf-select-all" id="pdfSelectAll" tabindex="0">Select All</button>
+      <button class="pdf-select-all" id="pdfSelectNone" tabindex="0">Deselect All</button>
+    </div>
+    <div class="pdf-preview" id="pdfPreview" role="list"></div>
+    <div class="modal-footer" id="pdfFooter" style="display:none">
+      <button class="btn-primary" id="pdfImportBtn" tabindex="0">Import Selected</button>
+      <button class="btn-secondary" id="pdfCancelBtn" tabindex="0">Cancel</button>
+    </div>
+    <div style="margin-top:0.75rem;font-family:var(--font-mono);font-size:0.6rem;color:var(--muted);line-height:1.7" id="pdfTip" aria-live="polite"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script>pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";</script>
+<script src="vault.js"></script>
+</body>
+</html>
